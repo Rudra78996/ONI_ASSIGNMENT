@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  borrowedBooks BorrowedBook[]
+
+  @@map("users")
+}
+
+model Author {
+  id        String   @id @default(uuid())
+  name      String
+  bio       String?
+  birthDate DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  books Book[]
+
+  @@map("authors")
+}
+
+model Book {
+  id          String   @id @default(uuid())
+  title       String
+  isbn        String?  @unique
+  description String?
+  publishedAt DateTime?
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author        Author         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  borrowedBooks BorrowedBook[]
+
+  @@map("books")
+}
+
+model BorrowedBook {
+  id         String    @id @default(uuid())
+  bookId     String
+  userId     String
+  borrowedAt DateTime  @default(now())
+  returnedAt DateTime?
+  dueDate    DateTime
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("borrowed_books")
+}
