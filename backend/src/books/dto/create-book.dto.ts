@@ -13,11 +13,6 @@ export class CreateBookDto {
   @IsNotEmpty()
   title: string;
 
-  @ApiPropertyOptional({ example: '9780747532699' })
-  @IsString()
-  @IsOptional()
-  isbn?: string;
-
   @ApiPropertyOptional({ example: 'First book in the Harry Potter series' })
   @IsString()
   @IsOptional()

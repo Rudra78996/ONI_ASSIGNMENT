@@ -9,7 +9,12 @@ export class AuthorsService {
 
   async create(createAuthorDto: CreateAuthorDto) {
     return this.prisma.author.create({
-      data: createAuthorDto,
+      data: {
+        ...createAuthorDto,
+        birthDate: createAuthorDto.birthDate 
+          ? new Date(createAuthorDto.birthDate) 
+          : undefined,
+      },
     });
   }
 
@@ -41,7 +46,12 @@ export class AuthorsService {
 
     return this.prisma.author.update({
       where: { id },
-      data: updateAuthorDto,
+      data: {
+        ...updateAuthorDto,
+        birthDate: updateAuthorDto.birthDate 
+          ? new Date(updateAuthorDto.birthDate) 
+          : undefined,
+      },
     });
   }
 

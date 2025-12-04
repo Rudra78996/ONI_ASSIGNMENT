@@ -71,7 +71,6 @@ async function main() {
   const book1 = await prisma.book.create({
     data: {
       title: "Harry Potter and the Philosopher's Stone",
-      isbn: '9780747532699',
       description: 'First book in the Harry Potter series',
       publishedAt: new Date('1997-06-26'),
       authorId: author1.id,
@@ -81,7 +80,6 @@ async function main() {
   const book2 = await prisma.book.create({
     data: {
       title: 'Harry Potter and the Chamber of Secrets',
-      isbn: '9780747538493',
       description: 'Second book in the Harry Potter series',
       publishedAt: new Date('1998-07-02'),
       authorId: author1.id,
@@ -91,7 +89,6 @@ async function main() {
   const book3 = await prisma.book.create({
     data: {
       title: 'A Game of Thrones',
-      isbn: '9780553103540',
       description: 'First book in A Song of Ice and Fire series',
       publishedAt: new Date('1996-08-06'),
       authorId: author2.id,
@@ -101,7 +98,6 @@ async function main() {
   const book4 = await prisma.book.create({
     data: {
       title: 'Murder on the Orient Express',
-      isbn: '9780062693662',
       description: 'A classic detective novel featuring Hercule Poirot',
       publishedAt: new Date('1934-01-01'),
       authorId: author3.id,

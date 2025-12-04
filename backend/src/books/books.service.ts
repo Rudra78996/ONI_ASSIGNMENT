@@ -10,7 +10,12 @@ export class BooksService {
 
   async create(createBookDto: CreateBookDto) {
     return this.prisma.book.create({
-      data: createBookDto,
+      data: {
+        ...createBookDto,
+        publishedAt: createBookDto.publishedAt 
+          ? new Date(createBookDto.publishedAt) 
+          : undefined,
+      },
       include: {
         author: true,
       },
@@ -103,7 +108,12 @@ export class BooksService {
 
     return this.prisma.book.update({
       where: { id },
-      data: updateBookDto,
+      data: {
+        ...updateBookDto,
+        publishedAt: updateBookDto.publishedAt 
+          ? new Date(updateBookDto.publishedAt) 
+          : undefined,
+      },
       include: {
         author: true,
       },
