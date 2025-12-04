@@ -8,7 +8,7 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: ['http://localhost:5173', 'http://localhost:3001'],
+    origin: ['http://localhost:5173', 'http://localhost:3001', 'https://oni-assignment.vercel.app'],
     credentials: true,
   });
 
