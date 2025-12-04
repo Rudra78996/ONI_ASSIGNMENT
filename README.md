@@ -1,39 +1,57 @@
 # Library Management System
 
-A full-stack library management application built with NestJS, PostgreSQL, Prisma, and React (TypeScript). This system allows managing books, authors, users, and book borrowing operations with JWT authentication.
+A modern, full-stack library management application with a beautiful UI built using NestJS, PostgreSQL, Prisma, React (TypeScript), and shadcn/ui components. This system provides comprehensive management of books, authors, users, and book borrowing operations with JWT authentication.
 
 ## 🚀 Features
 
-- **Authentication**: JWT-based authentication system
-- **Books Management**: CRUD operations with advanced filtering (search, author, borrowed status)
-- **Authors Management**: Complete author profile management
-- **Users Management**: User registration and listing
+### Core Functionality
+- **Authentication**: Secure JWT-based authentication with persistent sessions
+- **Books Management**: Full CRUD operations with advanced filtering (search, author, borrowed status)
+- **Authors Management**: Complete author profile management with biographical information
+- **Users Management**: User registration and comprehensive user listing
 - **Borrowing System**: 
-  - Borrow books with automatic due date (14 days)
-  - Return books
-  - Track borrowing history
-  - View borrowed books by user
+  - Borrow books with automatic due date calculation (14 days)
+  - Return books with tracking
+  - Complete borrowing history
+  - View borrowed books by user and status
+
+### UI/UX Features
+- **Modern Design**: Clean, professional interface using shadcn/ui components
+- **Responsive Layout**: Optimized for desktop and mobile devices
+- **Dark/Light Mode**: Black and white theme throughout
+- **Toggle Views**: Switch between card and list views for Books and Authors
+- **Loading States**: Visual feedback with animated spinners during operations
+- **Alert Dialogs**: Confirmation dialogs for destructive actions
+- **Date Pickers**: Intuitive date selection for published dates and birth dates
+- **Search & Filter**: Real-time search and multi-criteria filtering
+- **Status Indicators**: Visual badges with colored dots for book availability
 
 ## 🛠️ Tech Stack
 
 ### Backend
 - **NestJS** - Progressive Node.js framework
-- **PostgreSQL** - Relational database
-- **Prisma** - Modern ORM with migrations
+- **PostgreSQL** (Supabase) - Relational database
+- **Prisma** - Modern ORM with type-safe database access
 - **JWT** - JSON Web Tokens for authentication
-- **Swagger** - API documentation
-- **bcrypt** - Password hashing
+- **Swagger** - Interactive API documentation
+- **bcrypt** - Secure password hashing
+- **class-validator** - Request validation
 
 ### Frontend
-- **React 18** - UI library
-- **TypeScript** - Type safety
-- **Vite** - Build tool
-- **React Router** - Client-side routing
-- **Zustand** - State management
-- **Axios** - HTTP client
-- **Tailwind CSS** - Utility-first CSS
-- **Lucide React** - Icons
-- **date-fns** - Date formatting
+- **React 18** - Modern UI library with hooks
+- **TypeScript** - Type safety and better developer experience
+- **Vite** - Fast build tool and dev server
+- **React Router 6** - Client-side routing
+- **Zustand** - Lightweight state management
+- **Axios** - Promise-based HTTP client
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn/ui** - High-quality React components
+  - Button, Card, Input, Select, DatePicker, AlertDialog
+  - Field, Label, NavigationMenu, Calendar, Popover
+- **Radix UI** - Unstyled, accessible component primitives
+- **Lucide React** - Beautiful icon library
+- **date-fns** - Modern date utility library
+- **Inter Font** - Clean, professional typography
 
 ## 📦 Project Structure
 
@@ -249,23 +267,49 @@ To get a token:
 
 ## 🎨 Frontend Features
 
-- **Responsive Design** - Works on desktop and mobile
-- **Authentication Flow** - Login/Register with persistent sessions
+### Pages & Components
+- **Login/Register Pages**: 
+  - Modern signup-03 pattern from shadcn
+  - Centered layout with muted backgrounds
+  - Field components with validation
+  - Persistent authentication
+
 - **Books Page**:
-  - Search books by title/description
-  - Filter by author
-  - Filter by borrowed status
-  - Add/Edit/Delete books
+  - Toggle between card grid and table list views
+  - Real-time search by title/description
+  - Filter by author (dropdown)
+  - Filter by borrowed status (Available/Borrowed)
+  - Date picker for published date
+  - Visual status badges with colored indicators
+  - Edit/Delete actions with confirmation dialogs
+  - Loading states on all operations
+
 - **Authors Page**:
-  - View all authors with book count
-  - Add/Edit/Delete authors
-- **Users Page**:
-  - View all registered users
+  - Toggle between card grid and table list views
+  - Display author info with book count
+  - Date picker for birth date
+  - Bio with truncation (line-clamp)
+  - Edit/Delete actions with confirmation
+  - Loading indicators
+
 - **Borrowed Books Page**:
-  - View all borrowing transactions
-  - Borrow available books
-  - Return borrowed books
-  - Track due dates
+  - Clean table layout with book and user information
+  - Borrow new books with user and book selection
+  - Return functionality with confirmation
+  - Status tracking (Borrowed/Returned)
+  - Date tracking (borrowed date, due date, return date)
+  - Loading states on borrow and return
+
+### UI Components Used
+- **Navigation**: Black/white themed navbar with NavigationMenu
+- **Forms**: Field components with labels and validation
+- **Inputs**: Search inputs with icons, Select dropdowns, DatePickers
+- **Cards**: Modern card layouts for grid views
+- **Tables**: Clean, responsive table layouts for list views
+- **Buttons**: Black default variant with loading states
+- **Dialogs**: Alert confirmations for destructive actions
+- **Icons**: BookOpen, Calendar, User, Edit, Trash, LayoutGrid, List, Loader2
+- **Loading**: Animated spinners for async operations
 
 ## 🗄️ Database Schema
 
@@ -406,35 +450,154 @@ docker-compose up -d --build
 
 ## 📝 Design Decisions
 
-1. **Database Schema**: Used UUID for all primary keys for better security and scalability. Implemented cascading deletes for related entities.
+### Backend Architecture
+1. **Database Schema**: Used UUID for all primary keys for better security, distribution, and scalability. Implemented proper cascading deletes for related entities to maintain referential integrity.
 
-2. **Authentication**: JWT-based authentication with bcrypt password hashing. Tokens expire in 7 days (configurable).
+2. **Authentication**: JWT-based stateless authentication with bcrypt password hashing (10 rounds). Tokens expire in 7 days (configurable via environment variables).
 
-3. **API Design**: RESTful API with proper HTTP methods and status codes. Public endpoints for reading, protected endpoints for write operations.
+3. **API Design**: RESTful API following best practices with proper HTTP methods (GET, POST, PATCH, DELETE) and status codes. Public endpoints for reading data, protected endpoints for write operations.
 
 4. **Borrowing Logic**: 
-   - Books can only be borrowed if not currently borrowed
-   - Due date automatically set to 14 days from borrowing
-   - Track both borrow and return dates
+   - Books can only be borrowed if not currently borrowed (enforced at database level)
+   - Due date automatically calculated as 14 days from borrowing date
+   - Track both borrow and return timestamps for complete history
+   - One active borrow per book at a time
 
-5. **Frontend State**: Used Zustand for lightweight state management. Authentication state persisted in localStorage.
+5. **Validation**: Server-side validation using class-validator decorators with proper error messages and HTTP status codes.
 
-6. **Filtering**: Server-side filtering for books by search term, author, and borrowed status for optimal performance.
+6. **Error Handling**: Comprehensive exception filters for consistent error responses across the API.
 
-7. **Error Handling**: Proper error handling on both backend (exception filters) and frontend (try-catch with user feedback).
+### Frontend Architecture
+1. **State Management**: Zustand for lightweight, performant state management. Authentication state persisted in localStorage with automatic rehydration.
+
+2. **Component Library**: shadcn/ui components for consistent, accessible, and customizable UI. All components follow the black/white theme.
+
+3. **Data Fetching**: Centralized API client using Axios with proper error handling and loading states throughout the application.
+
+4. **Filtering**: Implemented client-side triggers with server-side filtering for optimal performance on large datasets.
+
+5. **UX Enhancements**:
+   - Loading spinners on all async operations (create, update, delete, borrow, return)
+   - Confirmation dialogs for destructive actions with loading states
+   - Disabled states to prevent double submissions
+   - Visual feedback with status badges and icons
+   - Toggle views for different user preferences
+
+6. **Type Safety**: Full TypeScript implementation with proper interfaces for all API responses and component props.
+
+7. **Accessibility**: Using Radix UI primitives ensures keyboard navigation, ARIA attributes, and screen reader support.
+
+### UI/UX Patterns
+1. **Consistent Layouts**: All CRUD pages follow similar patterns for ease of use
+2. **Visual Hierarchy**: Clear separation between headers, filters, and content
+3. **Responsive Grid**: 1/2/3 column layouts that adapt to screen size
+4. **Color Coding**: Green for available, red for borrowed, consistent throughout
+5. **Icon Usage**: Meaningful icons that enhance understanding (Calendar, Book, User)
+6. **Loading States**: Never leave users wondering if something is happening
 
 ## 🚧 Future Enhancements
 
-- Book availability tracking with quantity
-- Late fee calculation
-- Email notifications for due dates
-- User roles and permissions (Admin, Librarian, Member)
-- Book reservation system
-- Advanced search with multiple filters
-- Pagination for large datasets
-- Book categories and tags
-- Book ratings and reviews
-- Export reports (PDF, CSV)
+### Features
+- [ ] Book availability tracking with quantity (multiple copies)
+- [ ] Late fee calculation based on overdue days
+- [ ] Email notifications for due dates and overdues
+- [ ] User roles and permissions (Admin, Librarian, Member)
+- [ ] Book reservation/hold system
+- [ ] Advanced search with multiple filters and sorting
+- [ ] Pagination for large datasets
+- [ ] Book categories and tags
+- [ ] Book ratings and reviews system
+- [ ] Export reports (PDF, CSV) for analytics
+- [ ] Fine/penalty management
+- [ ] Renewal system for borrowed books
+- [ ] Reading history and recommendations
+
+### Technical Improvements
+- [ ] Unit and integration tests (Jest, React Testing Library)
+- [ ] E2E tests (Playwright/Cypress)
+- [ ] Performance optimization with React Query
+- [ ] Redis caching for frequently accessed data
+- [ ] Rate limiting for API endpoints
+- [ ] File upload for book covers
+- [ ] Advanced analytics dashboard
+- [ ] WebSocket for real-time updates
+- [ ] Mobile app (React Native)
+- [ ] GraphQL API option
+- [ ] Internationalization (i18n)
+- [ ] Dark mode toggle
+
+## 📸 Screenshots
+
+### Login Page
+Clean, centered login form with demo credentials display
+
+### Books Page - Card View
+Grid layout showing books with author, description, published date, and availability status
+
+### Books Page - List View
+Table format with all book details and quick actions
+
+### Authors Page
+Author cards showing bio, birth date, and book count with toggle views
+
+### Borrowed Books Page
+Complete borrowing history with user info, dates, and return functionality
+
+## 🔒 Security Features
+
+- Passwords hashed with bcrypt (10 salt rounds)
+- JWT token-based authentication
+- Protected routes requiring valid tokens
+- Input validation and sanitization
+- SQL injection prevention via Prisma ORM
+- XSS protection through React's built-in escaping
+- CORS configuration for production
+- Environment variable management
+- Secure HTTP-only cookie support (configurable)
+
+## 🚀 Deployment
+
+### Quick Deploy
+
+**Frontend (Vercel):**
+1. Push code to GitHub
+2. Import repository in Vercel
+3. Set environment variable: `VITE_API_URL=https://your-backend-url.com`
+4. Deploy automatically
+
+**Backend (Railway/Render):**
+1. Connect GitHub repository
+2. Set root directory to `backend`
+3. Add PostgreSQL database
+4. Configure environment variables (see DEPLOYMENT.md)
+5. Deploy
+
+### Detailed Instructions
+
+For comprehensive deployment guide including:
+- Step-by-step Vercel deployment
+- Railway/Render backend deployment
+- Database setup and migrations
+- Environment variables configuration
+- CORS setup
+- Troubleshooting
+
+**See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete instructions.**
+
+### Environment Variables
+
+**Frontend:**
+```env
+VITE_API_URL=https://your-backend-api.com
+```
+
+**Backend:**
+```env
+DATABASE_URL=postgresql://user:password@host:5432/library_db
+JWT_SECRET=your-secret-key
+JWT_EXPIRATION=7d
+NODE_ENV=production
+```
 
 ## 📄 License
 
@@ -442,4 +605,27 @@ MIT
 
 ## 👤 Author
 
+**Rudra**
+- GitHub: [@Rudra78996](https://github.com/Rudra78996)
+- Repository: [ONI_ASSIGNMENT](https://github.com/Rudra78996/ONI_ASSIGNMENT)
+
 Built for ONI Full-Stack Intern Assignment
+
+---
+
+## 🙏 Acknowledgments
+
+- [NestJS](https://nestjs.com/) for the amazing backend framework
+- [Prisma](https://www.prisma.io/) for the excellent ORM
+- [shadcn/ui](https://ui.shadcn.com/) for beautiful, accessible components
+- [Radix UI](https://www.radix-ui.com/) for primitive components
+- [Tailwind CSS](https://tailwindcss.com/) for utility-first styling
+- [Lucide](https://lucide.dev/) for the icon library
+
+## 📞 Support
+
+For support, issues, or feature requests, please open an issue on the GitHub repository.
+
+---
+
+**⭐ If you found this project helpful, please consider giving it a star!**
