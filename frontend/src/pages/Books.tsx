@@ -1,6 +1,34 @@
 import { useState, useEffect } from 'react';
 import { booksApi, authorsApi, Book, Author } from '../api';
-import { Plus, Edit2, Trash2, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Calendar, BookOpen, Loader2, LayoutGrid, List } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../components/ui/select';
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from '../components/ui/field';
+import { DatePicker } from '../components/ui/date-picker';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../components/ui/alert-dialog';
 
 const Books = () => {
   const [books, setBooks] = useState<Book[]>([]);
@@ -9,14 +37,22 @@ const Books = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [search, setSearch] = useState('');
-  const [filterAuthor, setFilterAuthor] = useState('');
+  const [filterAuthor, setFilterAuthor] = useState('all');
   const [filterBorrowed, setFilterBorrowed] = useState<string>('all');
+  const [deleteBookId, setDeleteBookId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+  const [deleting, setDeleting] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    description: string;
+    publishedAt: Date | undefined;
+    authorId: string;
+  }>({
     title: '',
-    isbn: '',
     description: '',
-    publishedAt: '',
+    publishedAt: undefined,
     authorId: '',
   });
 
@@ -29,7 +65,7 @@ const Books = () => {
     try {
       const filters: any = {};
       if (search) filters.search = search;
-      if (filterAuthor) filters.authorId = filterAuthor;
+      if (filterAuthor && filterAuthor !== 'all') filters.authorId = filterAuthor;
       if (filterBorrowed !== 'all') filters.borrowed = filterBorrowed === 'true';
       
       const data = await booksApi.getAll(filters);
@@ -52,27 +88,51 @@ const Books = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.authorId) {
+      alert('Please select an author');
+      return;
+    }
+
+    setSubmitting(true);
     try {
+      // Prepare data, removing empty optional fields
+      const dataToSend = {
+        title: formData.title,
+        authorId: formData.authorId,
+        ...(formData.description && { description: formData.description }),
+        ...(formData.publishedAt && { publishedAt: formData.publishedAt.toISOString().split('T')[0] }),
+      };
+
       if (editingBook) {
-        await booksApi.update(editingBook.id, formData);
+        await booksApi.update(editingBook.id, dataToSend);
       } else {
-        await booksApi.create(formData);
+        await booksApi.create(dataToSend);
       }
       setShowModal(false);
       resetForm();
       fetchBooks();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving book:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to save book';
+      alert(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage);
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this book?')) {
+  const confirmDelete = async () => {
+    if (deleteBookId) {
+      setDeleting(true);
       try {
-        await booksApi.delete(id);
+        await booksApi.delete(deleteBookId);
         fetchBooks();
       } catch (error) {
         console.error('Error deleting book:', error);
+      } finally {
+        setDeleting(false);
+        setDeleteBookId(null);
       }
     }
   };
@@ -80,9 +140,8 @@ const Books = () => {
   const resetForm = () => {
     setFormData({
       title: '',
-      isbn: '',
       description: '',
-      publishedAt: '',
+      publishedAt: undefined,
       authorId: '',
     });
     setEditingBook(null);
@@ -93,9 +152,8 @@ const Books = () => {
       setEditingBook(book);
       setFormData({
         title: book.title,
-        isbn: book.isbn || '',
         description: book.description || '',
-        publishedAt: book.publishedAt ? book.publishedAt.split('T')[0] : '',
+        publishedAt: book.publishedAt ? new Date(book.publishedAt) : undefined,
         authorId: book.authorId,
       });
     } else {
@@ -104,201 +162,329 @@ const Books = () => {
     setShowModal(true);
   };
 
-  if (loading) return <div className="text-center py-8">Loading...</div>;
+  if (loading) return <div className="flex items-center justify-center py-12"><div className="text-muted-foreground">Loading...</div></div>;
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8">
-      <div className="sm:flex sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Books</h1>
-          <p className="mt-2 text-sm text-gray-700">Manage your library's book collection</p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">Books</h1>
+          <p className="text-muted-foreground">Manage your library's book collection</p>
         </div>
-        <button
-          onClick={() => openModal()}
-          className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Book
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center border rounded-md">
+            <Button
+              variant={viewMode === 'card' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('card')}
+              className="rounded-r-none"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="rounded-l-none"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button onClick={() => openModal()}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Book
+          </Button>
+        </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Search</label>
-          <div className="mt-1 relative rounded-md shadow-sm">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="search">Search</Label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="search"
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
               placeholder="Search books..."
+              className="pl-9"
             />
           </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Filter by Author</label>
-          <select
-            value={filterAuthor}
-            onChange={(e) => setFilterAuthor(e.target.value)}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-          >
-            <option value="">All Authors</option>
-            {authors.map((author) => (
-              <option key={author.id} value={author.id}>
-                {author.name}
-              </option>
-            ))}
-          </select>
+        <div className="space-y-2">
+          <Label htmlFor="author-filter">Filter by Author</Label>
+          <Select value={filterAuthor} onValueChange={setFilterAuthor}>
+            <SelectTrigger id="author-filter">
+              <SelectValue placeholder="All Authors" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Authors</SelectItem>
+              {authors.map((author) => (
+                <SelectItem key={author.id} value={author.id}>
+                  {author.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Borrowed Status</label>
-          <select
-            value={filterBorrowed}
-            onChange={(e) => setFilterBorrowed(e.target.value)}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-          >
-            <option value="all">All Books</option>
-            <option value="true">Borrowed</option>
-            <option value="false">Available</option>
-          </select>
+        <div className="space-y-2">
+          <Label htmlFor="status-filter">Borrowed Status</Label>
+          <Select value={filterBorrowed} onValueChange={setFilterBorrowed}>
+            <SelectTrigger id="status-filter">
+              <SelectValue placeholder="All Books" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Books</SelectItem>
+              <SelectItem value="true">Borrowed</SelectItem>
+              <SelectItem value="false">Available</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {viewMode === 'card' ? (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {books.map((book) => (
-          <div key={book.id} className="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
-            <div className="px-6 py-5">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3 className="text-lg font-medium text-gray-900">{book.title}</h3>
-                  <p className="mt-1 text-sm text-gray-500">by {book.author?.name}</p>
+          <Card key={book.id} className="flex flex-col">
+            <CardHeader>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 space-y-1">
+                  <CardTitle className="text-xl line-clamp-1">{book.title}</CardTitle>
+                  <CardDescription className="flex items-center gap-1">
+                    by {book.author?.name}
+                  </CardDescription>
                 </div>
-                <div className="flex space-x-2">
-                  <button
+                <div className="flex gap-1">
+                  <Button
                     onClick={() => openModal(book)}
-                    className="text-indigo-600 hover:text-indigo-900"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
                   >
                     <Edit2 className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(book.id)}
-                    className="text-red-600 hover:text-red-900"
+                  </Button>
+                  <Button
+                    onClick={() => setDeleteBookId(book.id)}
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
               </div>
-              {book.isbn && (
-                <p className="mt-2 text-sm text-gray-600">ISBN: {book.isbn}</p>
-              )}
+            </CardHeader>
+            <CardContent className="flex-1">
               {book.description && (
-                <p className="mt-2 text-sm text-gray-600 line-clamp-2">{book.description}</p>
+                <p className="text-sm text-muted-foreground line-clamp-3">{book.description}</p>
               )}
-              <div className="mt-4 flex items-center justify-between">
-                <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    book.borrowedBooks && book.borrowedBooks.length > 0
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-green-100 text-green-800'
-                  }`}
-                >
-                  {book.borrowedBooks && book.borrowedBooks.length > 0 ? 'Borrowed' : 'Available'}
-                </span>
-              </div>
-            </div>
-          </div>
+              {book.publishedAt && (
+                <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>{new Date(book.publishedAt).toLocaleDateString()}</span>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter>
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+                  book.borrowedBooks && book.borrowedBooks.length > 0
+                    ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+                    : 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
+                }`}
+              >
+                <div className={`h-1.5 w-1.5 rounded-full ${
+                  book.borrowedBooks && book.borrowedBooks.length > 0 ? 'bg-red-600' : 'bg-green-600'
+                }`} />
+                {book.borrowedBooks && book.borrowedBooks.length > 0 ? 'Borrowed' : 'Available'}
+              </span>
+            </CardFooter>
+          </Card>
         ))}
       </div>
-
-      {showModal && (
-        <div className="fixed z-10 inset-0 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowModal(false)}></div>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <form onSubmit={handleSubmit}>
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    {editingBook ? 'Edit Book' : 'Add New Book'}
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Title</label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Author</label>
-                      <select
-                        required
-                        value={formData.authorId}
-                        onChange={(e) => setFormData({ ...formData, authorId: e.target.value })}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+      ) : (
+        <div className="rounded-md border">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                  Title
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                  Author
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                  Description
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                  Published Date
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {books.map((book) => (
+                <tr key={book.id} className="border-b transition-colors hover:bg-muted/50">
+                  <td className="p-4 align-middle font-medium">{book.title}</td>
+                  <td className="p-4 align-middle">
+                    <span className="text-sm text-muted-foreground">
+                      {book.author?.name || '-'}
+                    </span>
+                  </td>
+                  <td className="p-4 align-middle">
+                    <span className="text-sm text-muted-foreground line-clamp-2">
+                      {book.description || '-'}
+                    </span>
+                  </td>
+                  <td className="p-4 align-middle">
+                    <span className="text-sm text-muted-foreground">
+                      {book.publishedAt ? new Date(book.publishedAt).toLocaleDateString() : '-'}
+                    </span>
+                  </td>
+                  <td className="p-4 align-middle">
+                    <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold">
+                      <span
+                        className={`mr-1.5 h-2 w-2 rounded-full ${
+                          book.borrowedBooks && book.borrowedBooks.length > 0 ? 'bg-red-600' : 'bg-green-600'
+                        }`}
+                      ></span>
+                      {book.borrowedBooks && book.borrowedBooks.length > 0 ? 'Borrowed' : 'Available'}
+                    </span>
+                  </td>
+                  <td className="p-4 align-middle text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        onClick={() => openModal(book)}
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
                       >
-                        <option value="">Select an author</option>
-                        {authors.map((author) => (
-                          <option key={author.id} value={author.id}>
-                            {author.name}
-                          </option>
-                        ))}
-                      </select>
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        onClick={() => setDeleteBookId(book.id)}
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">ISBN</label>
-                      <input
-                        type="text"
-                        value={formData.isbn}
-                        onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Description</label>
-                      <textarea
-                        rows={3}
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Published Date</label>
-                      <input
-                        type="date"
-                        value={formData.publishedAt}
-                        onChange={(e) => setFormData({ ...formData, publishedAt: e.target.value })}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                  <button
-                    type="submit"
-                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    {editingBook ? 'Update' : 'Create'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
+
+      {showModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+          <Card className="w-full max-w-lg">
+            <form onSubmit={handleSubmit}>
+              <CardHeader>
+                <CardTitle>{editingBook ? 'Edit Book' : 'Add New Book'}</CardTitle>
+                <CardDescription>
+                  {editingBook ? 'Update book information' : 'Add a new book to your library'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor="title">Title</FieldLabel>
+                    <Input
+                      id="title"
+                      type="text"
+                      required
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="Enter book title"
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="author">Author</FieldLabel>
+                    <Select
+                      value={formData.authorId}
+                      onValueChange={(value) => setFormData({ ...formData, authorId: value })}
+                      required
+                    >
+                      <SelectTrigger id="author">
+                        <SelectValue placeholder="Select an author" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {authors.map((author) => (
+                          <SelectItem key={author.id} value={author.id}>
+                            {author.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="description">Description</FieldLabel>
+                    <textarea
+                      id="description"
+                      rows={3}
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="Enter book description (optional)"
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="publishedAt">Published Date</FieldLabel>
+                    <DatePicker
+                      date={formData.publishedAt}
+                      onDateChange={(date) => setFormData({ ...formData, publishedAt: date })}
+                      placeholder="Select published date"
+                    />
+                  </Field>
+                </FieldGroup>
+              </CardContent>
+              <CardFooter className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={submitting}>
+                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {editingBook ? 'Update' : 'Create'}
+                </Button>
+              </CardFooter>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      <AlertDialog open={!!deleteBookId} onOpenChange={(open) => !deleting && !open && setDeleteBookId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the book.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); confirmDelete(); }} disabled={deleting}>
+              {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

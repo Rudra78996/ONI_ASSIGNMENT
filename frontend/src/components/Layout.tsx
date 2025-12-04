@@ -1,6 +1,15 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { BookOpen, Users, User, BarChart, LogOut } from 'lucide-react';
+import { Button } from './ui/button';
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from './ui/navigation-menu';
+import { cn } from '../lib/utils';
 
 const Layout = () => {
   const { user, logout } = useAuthStore();
@@ -15,79 +24,93 @@ const Layout = () => {
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <BookOpen className="h-8 w-8 text-indigo-600" />
-                <span className="ml-2 text-xl font-bold text-gray-900">Library System</span>
-              </div>
-              <div className="hidden sm:ml-8 sm:flex sm:space-x-8">
-                <Link
-                  to="/books"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    isActive('/books')
-                      ? 'border-indigo-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
-                >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Books
-                </Link>
-                <Link
-                  to="/authors"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    isActive('/authors')
-                      ? 'border-indigo-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Authors
-                </Link>
-                <Link
-                  to="/users"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    isActive('/users')
-                      ? 'border-indigo-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  Users
-                </Link>
-                <Link
-                  to="/borrowed"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    isActive('/borrowed')
-                      ? 'border-indigo-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
-                >
-                  <BarChart className="h-4 w-4 mr-2" />
-                  Borrowed Books
-                </Link>
-              </div>
+    <div className="min-h-screen bg-background">
+      <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto flex h-16 items-center px-4">
+          <div className="flex items-center gap-2 mr-8">
+            <div className="flex items-center justify-center size-8 rounded-md bg-black">
+              <BookOpen className="size-5 text-white" />
             </div>
-            <div className="flex items-center">
-              <span className="text-sm text-gray-700 mr-4">
-                Welcome, <span className="font-medium">{user?.name}</span>
-              </span>
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </button>
-            </div>
+            <span className="text-xl font-bold tracking-tight text-black">Library System</span>
+          </div>
+
+          <NavigationMenu className="hidden md:flex">
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link 
+                    to="/books"
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      isActive('/books') && "bg-accent"
+                    )}
+                  >
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Books
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link 
+                    to="/authors"
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      isActive('/authors') && "bg-accent"
+                    )}
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Authors
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link 
+                    to="/users"
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      isActive('/users') && "bg-accent"
+                    )}
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Users
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <Link 
+                    to="/borrowed"
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      isActive('/borrowed') && "bg-accent"
+                    )}
+                  >
+                    <BarChart className="h-4 w-4 mr-2" />
+                    Borrowed Books
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+
+          <div className="ml-auto flex items-center gap-4">
+            <span className="hidden sm:block text-sm font-medium text-muted-foreground">
+              Welcome, <span className="text-foreground">{user?.name}</span>
+            </span>
+            <Button 
+              onClick={handleLogout}
+              size="sm"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="container mx-auto py-6 px-4">
         <Outlet />
       </main>
     </div>
