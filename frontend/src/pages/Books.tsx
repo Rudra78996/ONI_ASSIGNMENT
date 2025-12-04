@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { booksApi, authorsApi, Book, Author } from '../api';
-import { Plus, Edit2, Trash2, Search, Calendar, BookOpen, Loader2, LayoutGrid, List } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Calendar, Loader2, LayoutGrid, List } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -14,7 +14,6 @@ import {
 } from '../components/ui/select';
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from '../components/ui/field';

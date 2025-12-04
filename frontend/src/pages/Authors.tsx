@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { authorsApi, Author } from '../api';
-import { Plus, Edit2, Trash2, UserCircle, Calendar, BookOpen, LayoutGrid, List, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Calendar, BookOpen, LayoutGrid, List, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from '../components/ui/field';
