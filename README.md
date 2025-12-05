@@ -2,6 +2,12 @@
 
 A modern, full-stack library management application with a beautiful UI built using NestJS, PostgreSQL, Prisma, React (TypeScript), and shadcn/ui components. This system provides comprehensive management of books, authors, users, and book borrowing operations with JWT authentication.
 
+## 🌐 Live Deployment
+
+- **Frontend**: [https://frontend-psi-seven-53.vercel.app/](https://frontend-psi-seven-53.vercel.app/)
+- **Backend API**: [https://oni-assignment.onrender.com](https://oni-assignment.onrender.com)
+- **API Documentation**: [https://oni-assignment.onrender.com/api](https://oni-assignment.onrender.com/api)
+
 ## 🚀 Features
 
 ### Core Functionality
@@ -495,53 +501,6 @@ docker-compose up -d --build
 5. **Icon Usage**: Meaningful icons that enhance understanding (Calendar, Book, User)
 6. **Loading States**: Never leave users wondering if something is happening
 
-## 🚧 Future Enhancements
-
-### Features
-- [ ] Book availability tracking with quantity (multiple copies)
-- [ ] Late fee calculation based on overdue days
-- [ ] Email notifications for due dates and overdues
-- [ ] User roles and permissions (Admin, Librarian, Member)
-- [ ] Book reservation/hold system
-- [ ] Advanced search with multiple filters and sorting
-- [ ] Pagination for large datasets
-- [ ] Book categories and tags
-- [ ] Book ratings and reviews system
-- [ ] Export reports (PDF, CSV) for analytics
-- [ ] Fine/penalty management
-- [ ] Renewal system for borrowed books
-- [ ] Reading history and recommendations
-
-### Technical Improvements
-- [ ] Unit and integration tests (Jest, React Testing Library)
-- [ ] E2E tests (Playwright/Cypress)
-- [ ] Performance optimization with React Query
-- [ ] Redis caching for frequently accessed data
-- [ ] Rate limiting for API endpoints
-- [ ] File upload for book covers
-- [ ] Advanced analytics dashboard
-- [ ] WebSocket for real-time updates
-- [ ] Mobile app (React Native)
-- [ ] GraphQL API option
-- [ ] Internationalization (i18n)
-- [ ] Dark mode toggle
-
-## 📸 Screenshots
-
-### Login Page
-Clean, centered login form with demo credentials display
-
-### Books Page - Card View
-Grid layout showing books with author, description, published date, and availability status
-
-### Books Page - List View
-Table format with all book details and quick actions
-
-### Authors Page
-Author cards showing bio, birth date, and book count with toggle views
-
-### Borrowed Books Page
-Complete borrowing history with user info, dates, and return functionality
 
 ## 🔒 Security Features
 
@@ -574,21 +533,13 @@ Complete borrowing history with user info, dates, and return functionality
 
 ### Detailed Instructions
 
-For comprehensive deployment guide including:
-- Step-by-step Vercel deployment
-- Railway/Render backend deployment
-- Database setup and migrations
-- Environment variables configuration
-- CORS setup
-- Troubleshooting
-
-**See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete instructions.**
+For comprehensive deployment guide including step-by-step instructions for production deployment, database setup, environment configuration, and troubleshooting, see the [Deployment](#-deployment) section above.
 
 ### Environment Variables
 
 **Frontend:**
 ```env
-VITE_API_URL=https://your-backend-api.com
+VITE_API_URL=https://oni-assignment.onrender.com
 ```
 
 **Backend:**
@@ -597,11 +548,16 @@ DATABASE_URL=postgresql://user:password@host:5432/library_db
 JWT_SECRET=your-secret-key
 JWT_EXPIRATION=7d
 NODE_ENV=production
+FRONTEND_URL=https://frontend-psi-seven-53.vercel.app
 ```
 
-## 📄 License
+## 🌐 Production URLs
 
-MIT
+- **Live Application**: [https://frontend-psi-seven-53.vercel.app/](https://frontend-psi-seven-53.vercel.app/)
+- **Backend API**: [https://oni-assignment.onrender.com](https://oni-assignment.onrender.com)
+- **API Documentation (Swagger)**: [https://oni-assignment.onrender.com/api](https://oni-assignment.onrender.com/api)
+
+
 
 ## 👤 Author
 
@@ -610,22 +566,4 @@ MIT
 - Repository: [ONI_ASSIGNMENT](https://github.com/Rudra78996/ONI_ASSIGNMENT)
 
 Built for ONI Full-Stack Intern Assignment
-
 ---
-
-## 🙏 Acknowledgments
-
-- [NestJS](https://nestjs.com/) for the amazing backend framework
-- [Prisma](https://www.prisma.io/) for the excellent ORM
-- [shadcn/ui](https://ui.shadcn.com/) for beautiful, accessible components
-- [Radix UI](https://www.radix-ui.com/) for primitive components
-- [Tailwind CSS](https://tailwindcss.com/) for utility-first styling
-- [Lucide](https://lucide.dev/) for the icon library
-
-## 📞 Support
-
-For support, issues, or feature requests, please open an issue on the GitHub repository.
-
----
-
-**⭐ If you found this project helpful, please consider giving it a star!**
